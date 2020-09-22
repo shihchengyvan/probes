@@ -1,5 +1,6 @@
 
-.idea
-target
 
-./src/main/resources/output
+/.idea/
+/target/
+/src/main/resources/output/
+/src/main/resources/output_detail/
