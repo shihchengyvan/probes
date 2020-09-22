@@ -3,11 +3,9 @@ package com.telenav.probes;
 import com.telenav.probes.entity.Instant;
 import com.telenav.probes.entity.Section;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.locationtech.jts.geom.Coordinate;
 import scala.Tuple2;
 
@@ -17,15 +15,15 @@ import static com.telenav.probes.constants.Constants.*;
 
 
 public class App {
-    private static final Logger log = Logger.getLogger(App.class);
 
     public static void main(String[] args) {
+        // hide spark log
+        Logger.getLogger("org").setLevel(Level.ERROR);
         SparkSession ss = SparkSession.builder().appName("probes").master("local[*]").getOrCreate();
 
         // read raw data
         Dataset<Row> lines = ss.read().json("src/main/resources/raw/not_null.json");
         Dataset<Section> oneLineSections = lines.map(line -> {
-
             Row payload = line.getStruct(line.fieldIndex(PAYLOAD));
             Row logContext = payload.getStruct(payload.fieldIndex(LOG_CONTEXT));
             String carId = logContext.getString(logContext.fieldIndex(CAR_ID));
@@ -103,7 +101,14 @@ public class App {
 
 
         // output
-        Dataset<String> geojsons = cleanedSections.map(section -> {
+        Dataset<String> geojsons = getGeoJsonStringDataset(cleanedSections);
+        geojsons.coalesce(1).write().mode(SaveMode.Overwrite).text("src/main/resources/output/");
+
+//        getDetailsJsonStringDataset(cleanedSections).coalesce(1).write().mode(SaveMode.Overwrite).text("src/main/resources/output_detail/");
+    }
+
+    private static Dataset<String> getGeoJsonStringDataset(Dataset<Section> cleanedSections) {
+        return cleanedSections.map(section -> {
             StringBuilder sb = new StringBuilder();
             sb.append(",{\"type\": \"LineString\", \"coordinates\": [");
             for (Instant instant : section.getInstantList()) {
@@ -114,7 +119,20 @@ public class App {
 
             return sb.toString();
         }, Encoders.STRING());
-        geojsons.coalesce(1).write().text("src/main/resources/output/");
+    }
+
+    private static Dataset<String> getDetailsJsonStringDataset(Dataset<Section> cleanedSections) {
+        return cleanedSections.map(section -> {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\"type\": \"LineString\", \"coordinates\": [");
+            for (Instant instant : section.getInstantList()) {
+                sb.append("[").append(instant.getLon()).append(",").append(instant.getLat()).append("],");
+            }
+            sb.deleteCharAt(sb.length() - 1); // remove the last comma
+            sb.append("]").append(", \"carId\": \"").append(section.getCarId()).append("\"");
+            sb.append("}");
+            return sb.toString();
+        }, Encoders.STRING());
     }
 
 }
