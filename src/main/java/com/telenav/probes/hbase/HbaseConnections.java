@@ -3,10 +3,14 @@ package com.telenav.probes.hbase;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -134,15 +138,15 @@ public class HbaseConnections implements Closeable {
         return dataResult;
     }
 
-    public void scanByPrefixFilter(String tableName, String rowPrefix, String family) {
+    public void scanByRowPrefixFilter(String tableName, String rowPrefix, String family) {
         if (!isValidConnection()) {
             log.error("scan data failed due to failed connecting to Hbase.");
         }
         try (Table table = connectionInstance.getTable(TableName.valueOf(tableName))) {
             Scan scanDetails = new Scan();
             scanDetails.setFilter(new PrefixFilter(rowPrefix.getBytes()));
-            ResultScanner tableScanner = table.getScanner(scanDetails);
-            for (Result result : tableScanner) {
+            ResultScanner resultScanner = table.getScanner(scanDetails);
+            for (Result result : resultScanner) {
                 log.info(new String(result.getRow()));
                 result.getFamilyMap(family.getBytes()).forEach((x, y) -> {
                     log.info(new String(x) + " : " + new String(y));
@@ -152,6 +156,28 @@ public class HbaseConnections implements Closeable {
             log.error("connect to Hbase failed !", e);
         }
     }
+
+    @SneakyThrows
+    public void scanByRowRegexFilter(String tableName, String rowReg, String family) {
+        if (!isValidConnection()) {
+            log.error("scan data failed due to failed connecting to Hbase.");
+        }
+        try (Table table = connectionInstance.getTable(TableName.valueOf(tableName))) {
+            Scan scanDetails = new Scan();
+            Filter filter = new RowFilter(CompareOperator.EQUAL, new RegexStringComparator(rowReg));
+            scanDetails.setFilter(filter);
+            ResultScanner resultScanner = table.getScanner(scanDetails);
+            for (Result result : resultScanner) {
+                log.info(new String(result.getRow()));
+                result.getFamilyMap(family.getBytes()).forEach((x, y) -> {
+                    log.info(new String(x) + " : " + new String(y));
+                });
+            }
+        } catch (IOException e) {
+            log.error("connect to Hbase failed !", e);
+        }
+    }
+
 
     private boolean isValidConnection() {
         return connectionInstance != null && !connectionInstance.isClosed();
