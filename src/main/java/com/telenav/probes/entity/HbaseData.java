@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * @program: probes
  * @description:
@@ -15,8 +17,8 @@ import lombok.Setter;
 public class HbaseData {
     @SerializedName("type")
     String type;
-//    @SerializedName("coordinates")
-//    String coordinates;
+    @SerializedName("coordinates")
+    List<List<String>> coordinates;
     @SerializedName("carId")
     String carId;
 }

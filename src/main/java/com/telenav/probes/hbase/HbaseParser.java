@@ -6,11 +6,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.hadoop.hbase.client.Table;
+import org.locationtech.jts.geom.Coordinate;
+import ch.hsr.geohash.GeoHash;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
@@ -40,7 +43,11 @@ public class HbaseParser {
                 while (Objects.nonNull(line)) {
                     HbaseData data = parserString2HbaseData(line);
                     String col = String.join(",", new Timestamp(System.currentTimeMillis()).toString(), String.valueOf(random.nextLong()));
-                    connections.insertTableWithExistTable(table, data.getCarId(), "info", col, line);
+                    List<String> pointList = data.getCoordinates().get(data.getCoordinates().size() / 2);
+                    Coordinate coordinate = new Coordinate(Double.valueOf(pointList.get(0)), Double.valueOf(pointList.get(1)));
+                    String geohash = GeoHash.geoHashStringWithCharacterPrecision(coordinate.y, coordinate.x, 5);
+                    // with key format with carID_geohash
+                    connections.insertTableWithExistTable(table, String.join("_", data.getCarId(), geohash), "info", col, line);
                     line = reader.readLine();
                 }
                 table.close();

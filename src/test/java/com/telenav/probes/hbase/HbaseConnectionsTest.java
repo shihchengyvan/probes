@@ -15,9 +15,16 @@ public class HbaseConnectionsTest {
 
     @Test
     @SneakyThrows
-    public void scanByRowRegexFilter() {
+    public void scanByRowRegexFilterCarID() {
         try(HbaseConnections hbaseConnections = new HbaseConnections()){
             hbaseConnections.scanByRowRegexFilter("probe_test","^bc.*","info");
+        }
+    }
+    @Test
+    @SneakyThrows
+    public void scanByRowRegexFilterGeoHash() {
+        try(HbaseConnections hbaseConnections = new HbaseConnections()){
+            hbaseConnections.scanByRowRegexFilter("probe_test",".*_c22.*","info");
         }
     }
 }
