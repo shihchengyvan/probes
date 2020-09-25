@@ -17,6 +17,14 @@ public class Constants {
     public static final String LAT = "lat";
     public static final String LON = "lon";
     public static final long TIMESTAMP_20200701 = 1593561600L;
+    public static final String COMMA = ",";
+    public static final String SPACE =" ";
+    public static final String LINESRING = "LINESRING";
+    public static final String LEFT_BRACKET = "(";
+    public static final String RIGHT_BRACKET = ")";
+    public static final String WKT = "WKT";
+
+
 
     private Constants(){
     }

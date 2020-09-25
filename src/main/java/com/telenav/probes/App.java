@@ -1,5 +1,6 @@
 package com.telenav.probes;
 
+import com.telenav.probes.constants.Constants;
 import com.telenav.probes.entity.Instant;
 import com.telenav.probes.entity.Section;
 import org.apache.commons.lang.StringUtils;
@@ -106,32 +107,47 @@ public class App {
 
 //        getDetailsJsonStringDataset(cleanedSections).coalesce(1).write().mode(SaveMode.Overwrite).text("src/main/resources/output_detail/");
     }
+    // provide a wkt method for the geometry
+    private static void generateGeometryWKT(Section section, StringBuilder sBuilder){
 
+        sBuilder.append("SRID=4326;LINESTRING(");
+        for(Instant instant : section.getInstantList()){
+            String loc = String.join(" ", String.valueOf(instant.getLon()), String.valueOf(instant.getLat()));
+            sBuilder.append(loc).append(COMMA);
+        }
+        sBuilder.deleteCharAt(sBuilder.length() - 1).append(RIGHT_BRACKET);
+    }
+    private static void generateCoordinateList(Section section, StringBuilder sBuilder){
+        sBuilder.append("[");
+        for (Instant instant : section.getInstantList()) {
+            sBuilder.append("[").append(instant.getLon()).append(",").append(instant.getLat()).append("],");
+        }
+        sBuilder.deleteCharAt(sBuilder.length() - 1); // remove the last comma
+        sBuilder.append("]");
+    }
     private static Dataset<String> getGeoJsonStringDataset(Dataset<Section> cleanedSections) {
         return cleanedSections.map(section -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append(",{\"type\": \"LineString\", \"coordinates\": [");
-            for (Instant instant : section.getInstantList()) {
-                sb.append("[").append(instant.getLon()).append(",").append(instant.getLat()).append("],");
-            }
-            sb.deleteCharAt(sb.length() - 1); // remove the last comma
-            sb.append("]}");
-
-            return sb.toString();
+            StringBuilder sBuilder = new StringBuilder();
+            sBuilder.append(",{\"type\": \"LineString\", \"coordinates\": ");
+            generateCoordinateList(section, sBuilder);
+            sBuilder.append("}");
+            return sBuilder.toString();
         }, Encoders.STRING());
     }
 
-    private static Dataset<String> getDetailsJsonStringDataset(Dataset<Section> cleanedSections) {
+    private static Dataset<String> getDetailsJsonStringDataset(Dataset<Section> cleanedSections, String mode) {
         return cleanedSections.map(section -> {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{\"type\": \"LineString\", \"coordinates\": [");
-            for (Instant instant : section.getInstantList()) {
-                sb.append("[").append(instant.getLon()).append(",").append(instant.getLat()).append("],");
+            StringBuilder sBuilder = new StringBuilder();
+            sBuilder.append("{\"type\": \"LineString\", \"coordinates\": ");
+            if(mode.equals(WKT)){
+                generateGeometryWKT(section, sBuilder);
             }
-            sb.deleteCharAt(sb.length() - 1); // remove the last comma
-            sb.append("]").append(", \"carId\": \"").append(section.getCarId()).append("\"");
-            sb.append("}");
-            return sb.toString();
+            else {
+                generateCoordinateList(section, sBuilder);
+            }
+            sBuilder.append(", \"carId\": \"").append(section.getCarId()).append("\"");
+            sBuilder.append("}");
+            return sBuilder.toString();
         }, Encoders.STRING());
     }
 
