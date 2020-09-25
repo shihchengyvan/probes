@@ -47,7 +47,7 @@ public class HbaseParser {
                     Coordinate coordinate = new Coordinate(Double.valueOf(pointList.get(0)), Double.valueOf(pointList.get(1)));
                     String geohash = GeoHash.geoHashStringWithCharacterPrecision(coordinate.y, coordinate.x, 5);
                     // with key format with carID_geohash
-                    connections.insertTableWithExistTable(table, String.join("_", data.getCarId(), geohash), "info", col, line);
+                    connections.insertDataWithExistTable(table, String.join("_", data.getCarId(), geohash), "info", col, line);
                     line = reader.readLine();
                 }
                 table.close();

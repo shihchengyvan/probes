@@ -114,7 +114,7 @@ public class HbaseConnections implements Closeable {
     }
 
     @SneakyThrows
-    public void insertTableWithExistTable(Table table, String rowKey, String colFamily, String col, String val) {
+    public void insertDataWithExistTable(Table table, String rowKey, String colFamily, String col, String val) {
         if (Objects.nonNull(connectionInstance) && Objects.nonNull(table)) {
             Put data = new Put(rowKey.getBytes());
             data.addColumn(colFamily.getBytes(), col.getBytes(), val.getBytes());
@@ -147,10 +147,8 @@ public class HbaseConnections implements Closeable {
             scanDetails.setFilter(new PrefixFilter(rowPrefix.getBytes()));
             ResultScanner resultScanner = table.getScanner(scanDetails);
             for (Result result : resultScanner) {
-                log.info(new String(result.getRow()));
-                result.getFamilyMap(family.getBytes()).forEach((x, y) -> {
-                    log.info(new String(x) + " : " + new String(y));
-                });
+                log.info("row -> " + new String(result.getRow()));
+                result.getFamilyMap(family.getBytes()).forEach((x, y) -> log.info(new String(x) + " : " + new String(y)));
             }
         } catch (IOException e) {
             log.error("connect to Hbase failed !", e);
@@ -168,16 +166,13 @@ public class HbaseConnections implements Closeable {
             scanDetails.setFilter(filter);
             ResultScanner resultScanner = table.getScanner(scanDetails);
             for (Result result : resultScanner) {
-                log.info(new String(result.getRow()));
-                result.getFamilyMap(family.getBytes()).forEach((x, y) -> {
-                    log.info(new String(x) + " : " + new String(y));
-                });
+                log.info("row -> " + new String(result.getRow()));
+                result.getFamilyMap(family.getBytes()).forEach((x, y) -> log.info(new String(x) + " : " + new String(y)));
             }
         } catch (IOException e) {
             log.error("connect to Hbase failed !", e);
         }
     }
-
 
     private boolean isValidConnection() {
         return connectionInstance != null && !connectionInstance.isClosed();
