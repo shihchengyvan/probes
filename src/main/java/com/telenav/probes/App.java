@@ -113,12 +113,12 @@ public class App {
     // provide a wkt method for the geometry
     private static void generateGeometryWKT(Section section, StringBuilder sBuilder){
 
-        sBuilder.append("SRID=4326;LINESTRING(");
+        sBuilder.append("\"SRID=4326;LINESTRING(");
         for(Instant instant : section.getInstantList()){
             String loc = String.join(" ", String.valueOf(instant.getLon()), String.valueOf(instant.getLat()));
             sBuilder.append(loc).append(COMMA);
         }
-        sBuilder.deleteCharAt(sBuilder.length() - 1).append(RIGHT_BRACKET);
+        sBuilder.deleteCharAt(sBuilder.length() - 1).append(")\"");
     }
     private static void generateCoordinateList(Section section, StringBuilder sBuilder){
         sBuilder.append("[");
