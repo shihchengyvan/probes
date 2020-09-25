@@ -23,7 +23,7 @@ public class App {
         SparkSession ss = SparkSession.builder().appName("probes").master("local[*]").getOrCreate();
 
         // read raw data
-        Dataset<Row> lines = ss.read().json("src/main/resources/raw/not_null.txt");
+        Dataset<Row> lines = ss.read().json("src/main/resources/raw/not_null.json");
         Dataset<Section> oneLineSections = lines.map(App::transform2Section,
                                         Encoders.bean(Section.class)).filter(Objects::nonNull);
 
