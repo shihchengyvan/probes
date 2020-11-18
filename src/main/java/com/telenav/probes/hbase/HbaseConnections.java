@@ -42,7 +42,7 @@ public class HbaseConnections implements Closeable {
 
 
     private void setup() {
-        setup("xid-mapdata-02,xid-gemini-01,xid-gemini-02");
+        setup("xid-gemini-03,xid-gemini-02");
     }
 
     @SneakyThrows
